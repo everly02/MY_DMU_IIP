@@ -1,10 +1,9 @@
 import numpy as np
 import pandas as pd
-from sklearn.calibration import LabelEncoder
-from sklearn.model_selection import train_test_split
-
+from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
+
+#import nni
 class NeuralNetwork:
     def __init__(self, input_size, hidden_sizes, output_size):
         self.input_size = input_size
@@ -60,30 +59,21 @@ class NeuralNetwork:
         for i in range(len(self.weights) - 1, -1, -1):
             self.weights[i] += learning_rate * self.inputs[i].T.dot(deltas[len(self.weights) - 1 - i])
             self.biases[i] += learning_rate * np.sum(deltas[len(self.weights) - 1 - i], axis=0, keepdims=True)
-
-    def train(self, input_data, target, epochs, learning_rate):
-        for epoch in range(epochs):
-            output = self.forward(input_data)
-            self.backward(target, learning_rate)
-
-            if epoch % 1000 == 0:
-                loss = np.mean(np.square(target - output))
-                print(f"Epoch {epoch}, Loss: {loss}")
             
     def threshold_classify(self, output, threshold=0.5):
-        # 根据阈值进行二元分类
+        # 二元分类
         return (output > threshold).astype(int)
     
 def load_data(file_path):
     data = pd.read_csv(file_path)
     
-    # 使用LabelEncoder对非数值型特征进行编码
+    # 对特征进行编码
     label_encoder = LabelEncoder()
     for column in data.columns:
         if data[column].dtype == np.object_:
             data[column] = label_encoder.fit_transform(data[column])
 
-    # 假设数据的最后一列是目标变量，前面的列是特征
+    # 最后一列是目标变量，前面的列是特征
     features = data.iloc[:, :-1].values
     target = data.iloc[:, -1].values.reshape(-1, 1)
     return features, target
@@ -100,24 +90,32 @@ def split_data(features, target, train_ratio=0.8):
 
     return train_features, train_target, test_features, test_target
 
-def plot_learning_curve(train_losses, val_losses):
-    plt.figure(figsize=(10, 6))
-    plt.plot(train_losses, label='Training Loss')
-    plt.plot(val_losses, label='Validation Loss')
-    plt.title('Learning Curve')
+def plot_lr(losses):
+    plt.figure(figsize=(6, 6))
+
+    # 学习曲线
+    #plt.subplot(1, 2, 1)
+    plt.plot(losses, label='training loss')
+    plt.title('training loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
+    
+    plt.tight_layout()
     plt.show()
-
-def plot_accuracy_curve(train_accuracies, val_accuracies):
-    plt.figure(figsize=(10, 6))
-    plt.plot(train_accuracies, label='Training Accuracy')
-    plt.plot(val_accuracies, label='Validation Accuracy')
-    plt.title('Accuracy Curve')
+    
+def plot_acc(accuracies):
+    
+    plt.figure(figsize=(6, 6))
+    # 准确率曲线
+    #plt.subplot(1, 2, 1)
+    plt.plot(accuracies, label='test set accuracy', color='orange')
+    plt.title('test set accuracy')
     plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
+    plt.ylabel('accuracy')
     plt.legend()
+
+    plt.tight_layout()
     plt.show()
 
 if __name__ == "__main__":
@@ -130,23 +128,51 @@ if __name__ == "__main__":
 
     # 创建神经网络
     input_size = train_features.shape[1]
-    hidden_sizes = [4]
+    hidden_sizes = [7,6,4]
     output_size = 1
     nn = NeuralNetwork(input_size=input_size, hidden_sizes=hidden_sizes, output_size=output_size)
 
-    # 训练神经网络
-    epochs = 8000
-    learning_rate = 0.01
-    nn.train(train_features, train_target, epochs=epochs, learning_rate=learning_rate)
+    # 训练BP神经网络
+    epochs = 10000
+    learning_rate = 0.001
+    
+    losses = []  # 记录训练损失
+    accuracies = []  # 记录测试准确率
 
-    # 测试
-    predictions = nn.forward(test_features)
-    threshold_predictions = nn.threshold_classify(predictions)
+    for epoch in range(epochs):
+        output = nn.forward(train_features)
+        nn.backward(train_target, learning_rate)
+
+        # 记录训练损失
+        loss = np.mean(np.square(train_target - output))
+        losses.append(loss)
+    
+        if epoch % 1000 == 0:
+            # 在验证集上计算准确率
+            predictions = nn.forward(test_features)
+            threshold_predictions = nn.threshold_classify(predictions)
+            accuracy = np.mean(threshold_predictions == test_target)
+            accuracies.append(accuracy)
+
+            print(f"Epoch {epoch}, Training Loss: {loss}, Test Accuracy: {accuracy}")
+    
     
     # 计算测试集的准确率
-    accuracy = np.mean(threshold_predictions == test_target)
-    print(f"Test Accuracy: {accuracy}")
-    print("Threshold Predictions:")
-    print(threshold_predictions)
-
+    final_accuracy = np.mean(threshold_predictions == test_target)
+    print("测试结果:")
+    print(f"测试准确率: {final_accuracy}")
+    
+    # 绘制学习曲线
+    #plot_lr(losses)
+    
+    # 测试BP神经网络
+    predictions = nn.forward(test_features)
+    threshold_predictions = nn.threshold_classify(predictions)
+    for pd in range(1,len(predictions)):
+        print(f"预测：{threshold_predictions[pd]}, 实际：{test_target[pd]}")
+    #print(threshold_predictions)
+    plot_acc(accuracies)
+    
+    
+    
 
