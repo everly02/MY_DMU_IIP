@@ -74,7 +74,7 @@ def load_data(file_path):
             data[column] = label_encoder.fit_transform(data[column])
 
     # 最后一列是目标变量，前面的列是特征
-    features = data.iloc[:, :-1].values
+    features = data.iloc[:, :-1].values 
     target = data.iloc[:, -1].values.reshape(-1, 1)
     return features, target
 
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     print(f"测试准确率: {final_accuracy}")
     
     # 绘制学习曲线
-    #plot_lr(losses)
+    plot_lr(losses)
     
     # 测试BP神经网络
     predictions = nn.forward(test_features)

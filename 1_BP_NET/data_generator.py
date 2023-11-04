@@ -4,7 +4,7 @@ import random
 def generate_csv(filename, num_rows, composer_weights=None, w1=None,w2=None):
     with open(filename, mode='w', newline='') as file:
         writer = csv.writer(file)
-        # 写入CSV文件的表头
+        # 写入CSV表头
         writer.writerow(["Composer", "Genre1", "Genre2" ,"Liked"])
         i=0
         while i<num_rows:
@@ -22,7 +22,7 @@ def generate_csv(filename, num_rows, composer_weights=None, w1=None,w2=None):
                 writer.writerow([composer, genre1, genre2, liked])
                 i+=1
 if __name__ == "__main__":
-    # 定义作曲家和流派的权重字典
+    # 权重字典
     composer_weights = {"taylor":0.8, "jay":0.7, "lucy":0.6, "troye":0.5, "beyonce":0.4, "kanye":0.3, "micheal":0.2}
     genre_weights1 = {"pop":0.7, "rock":0.6, "none":0.5, "electronic":0.4, "jazz":0.3}
     genre_weights2 ={"absolute":0.7, "rap":0.6, "none":0.5, "world music":0.4, "classical":0.3}
