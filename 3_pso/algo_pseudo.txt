@@ -1,0 +1,479 @@
+IMPORT matplotlib
+
+matplotlib.use('TkAgg')
+
+IMPORT matplotlib.pyplot as plt
+
+IMPORT random
+
+IMPORT sys
+
+IMPORT math
+
+
+
+DEFINE CLASS Particles:
+
+    DEFINE FUNCTION __init__(self, initialValue):
+
+        SET self.position TO []
+
+        SET self.speed TO []
+
+        SET self.individual_best TO []
+
+        SET self.error_of_best TO -1
+
+        SET self.individual_approach TO -1
+
+
+
+        FOR i IN range(number_of_dimensions):
+
+            self.speed.append(random.uniform(-1, 1))
+
+            self.position.append(initialValue[i])
+
+
+
+    # calculate fittness costfuntion
+
+    DEFINE FUNCTION calculate_fitness(self, costfuntion):
+
+        SET self.approach TO costfuntion(self.position)
+
+
+
+        # Check IF your current position is your individual best...
+
+        IF self.approach > self.error_of_best or self.error_of_best EQUALS -1:
+
+            SET self.individual_best TO self.position
+
+            SET self.error_of_best TO self.approach
+
+
+
+    #  Update new particle rate...
+
+    DEFINE FUNCTION speed_update(self, group_best_position):
+
+        SET w TO 0.99  # The coefficient of the desire to maintain the previous velocity of the particle.
+
+        SET c1 TO 1.99  # The coefficient of the desire to protect one's own best.
+
+        SET c2 TO 1.99  # Coefficient of willingness to get the best Boxes_value of the herd.
+
+
+
+        FOR i IN range(number_of_dimensions):
+
+            SET r1 TO random.random()
+
+            SET r2 TO random.random()
+
+
+
+            SET cognitive_speed TO c1 * r1 * (self.individual_best[i] - self.position[i])
+
+            SET social_speed TO c2 * r2 * (group_best_position[i] - self.position[i])
+
+            SET self.speed[i] TO w * self.speed[i] + cognitive_speed + social_speed
+
+
+
+    # Calculating new positions based on newly updated particle velocity...
+
+    DEFINE FUNCTION position_update(self, Bounds):
+
+        FOR i IN range(number_of_dimensions):
+
+            SET maxVelocity TO (Bounds[i][1] - Bounds[i][0])
+
+
+
+            IF self.speed[i] < -maxVelocity:
+
+                SET self.speed[i] TO -maxVelocity
+
+            ELSEIF self.speed[i] > maxVelocity:
+
+                SET self.speed[i] TO maxVelocity
+
+
+
+            self.position[i] += self.speed[i]
+
+
+
+            IF self.position[i] > Bounds[i][1]:
+
+                # If position is above the upper limit Boxes_value, pull to the upper limit Boxes_value
+
+                SET self.position[i] TO Bounds[i][1]
+
+            ELSEIF self.position[i] < Bounds[i][0]:
+
+                # If position is below the lower limit Boxes_value, pull to the lower limit Boxes_value
+
+                SET self.position[i] TO Bounds[i][0]
+
+            ELSE:
+
+                SET self.position[i] TO round(self.position[i])
+
+
+
+
+
+DEFINE CLASS Particle_swarm_optimization:
+
+    SET box_value TO []
+
+    SET box_names TO []
+
+    SET best_position_individual TO []
+
+    SET error_best TO -1
+
+
+
+    DEFINE FUNCTION __init__(self, function, Initial_Values, value, kg, names, Bounds_value, number_of_particles, particles,
+
+                 max_iteration,
+
+                 get_steps=True):  # Opt_function, initialValue, Bounds, number_of_particles=7, max_iteration=0.1
+
+        global number_of_dimensions
+
+
+
+        SET number_of_dimensions TO len(Initial_Values)
+
+        SET self.error_best TO -1  # Best approach FOR group
+
+        SET self.best_position_individual TO []  # Best position FOR group
+
+        SET self.names TO names
+
+        SET self.value TO value
+
+        SET self.kg TO kg
+
+        SET self.max_iteration TO max_iteration
+
+        SET fitness TO []
+
+        # Let's assign initial values to our version...
+
+        SET herd TO []
+
+        FOR i IN range(particles):
+
+            herd.append(Particles(Initial_Values))
+
+
+
+        # Optimization cycle start...
+
+        SET counter TO 0
+
+        WHILE counter < max_iteration:
+
+            # Calculation of the suitability of the particles IN the swarm FOR the costfuntion...
+
+            FOR j IN range(particles):
+
+                herd[j].calculate_fitness(function)
+
+
+
+
+
+                # Checking whether the current thread is the global best and making the necessary updates
+
+
+
+                IF herd[j].approach > self.error_best or self.error_best EQUALS -1:
+
+                    SET self.best_position_individual TO list(herd[j].position)
+
+                    SET fitness TO list(herd[j].position)
+
+                    SET self.error_best TO float(herd[j].approach)
+
+
+
+
+
+
+
+            # Updating speeds and positions IN the herd...
+
+            FOR j IN range(particles):
+
+                herd[j].speed_update(self.best_position_individual)
+
+                herd[j].position_update(Bounds_value)
+
+
+
+            SET total_profit TO 0
+
+            SET totalKG TO 0
+
+            # loop swarm and update velocities and position
+
+            FOR i IN range(number_of_particles):
+
+                total_profit += self.best_position_individual[i] * self.value[i]
+
+                totalKG += self.best_position_individual[i] * self.kg[i]
+
+            self.box_value.append(total_profit)
+
+            self.box_names.append(totalKG)
+
+
+
+            IF get_steps:
+
+                OUTPUT(self.best_position_individual)
+
+            counter += 1
+
+        OUTPUT("fitness",fitness)
+
+
+
+    # Printing the results...
+
+    DEFINE FUNCTION OUTPUT_results(self):
+
+        OUTPUT('\nRESULTS:\n')
+
+        SET totalProfit TO 0
+
+        SET totalKG TO 0
+
+        FOR i IN range(len(self.best_position_individual)):
+
+            OUTPUT(self.names[i], ': ', self.best_position_individual[i], sep='')
+
+            totalProfit += self.best_position_individual[i] * self.value[i]
+
+            totalKG += self.best_position_individual[i] * self.kg[i]
+
+        OUTPUT('#' * 50, '\nProfit: ', totalProfit, ',\nKilogram: ', totalKG, sep='')
+
+    
+
+    DEFINE FUNCTION plotGraph(self, filename=''):
+
+        plt.plot(self.box_names, self.box_value)
+
+        plt.xlabel('Kilogram (capacity)')
+
+        plt.ylabel('Profit made')
+
+        plt.title('Profit by Results - Kilogram Chart')
+
+        plt.grid(True)
+
+
+
+        IF not (filename EQUALS ''):
+
+            plt.savefig(filename)
+
+
+
+        plt.show()
+
+        plt.close()
+
+    """
+
+    DEFINE FUNCTION plotGraphError(self, filename=''):
+
+        plt.plot(self.max_iteration)
+
+        plt.xlabel('Iteration')
+
+        plt.ylabel('Error')
+
+        plt.title('Error vs iteration')
+
+        plt.grid(True)
+
+
+
+        IF not (filename EQUALS ''):
+
+            plt.savefig(filename)
+
+
+
+        plt.show()
+
+        plt.close()
+
+    """
+
+SET Name TO []
+
+SET kg TO []
+
+SET value TO []
+
+SET maxKg TO []
+
+
+
+# the cost_function we are trying to optimize (maximize)
+
+DEFINE FUNCTION Opt_function(x):
+
+    SET t TO value_function(x)
+
+    RETURN t + kilogram_function(x, t)
+
+
+
+# cost_function to maximize the values of the boxes
+
+DEFINE FUNCTION value_function(x):
+
+    SET total TO 0
+
+    FOR i IN range(len(x)):
+
+        total += x[i] * value[i]  # - * Boxes_value
+
+    RETURN total
+
+
+
+# cost_function to maximize the weight of the boxes
+
+DEFINE FUNCTION kilogram_function(x, rest_elements):
+
+    SET total TO 0
+
+    FOR i IN range(len(x)):
+
+        total += x[i] * kg[i]
+
+
+
+    IF total <= maxKg[0]:
+
+        IF total <= rest_elements:
+
+            RETURN rest_elements - total
+
+        ELSE:
+
+            RETURN 0
+
+    ELSE:
+
+        RETURN -rest_elements
+
+
+
+DEFINE FUNCTION solution(names, capacity, Vehicle_capacity, Boxes_value):
+
+    # initializing the starting position
+
+    OUTPUT('[item_name: lower_bound - upper_bound]\n', sep='')
+
+    SET initial_values TO []
+
+    SET Bounds_value TO []
+
+    FOR i IN range(len(names)):
+
+        initial_values.append(0)
+
+        Bounds_value.append((0,1))
+
+        OUTPUT(names[i], ': ', Bounds_value[i][0], ' - ', Bounds_value[i][1], sep='')
+
+    OUTPUT('\ntotal, including ', len(names), ' there is a variable...\n\n', sep='')
+
+
+
+    SET pso TO Particle_swarm_optimization(Opt_function, initial_values, Boxes_value, capacity, names, Bounds_value,
+
+                                      number_of_particles=len(names), particles=100, max_iteration=50, get_steps=True)
+
+    pso.OUTPUT_results()
+
+    pso.plotGraph(filename='test')
+
+    #pso.plotGraphError(filename='error')
+
+
+
+DEFINE FUNCTION run_assignment(filepath):
+
+    TRY:
+
+        with open(filepath) as file:
+
+            SET lines TO file.readlines()
+
+            maxKg.append(int(lines[0]))
+
+            FOR line IN lines[1:]:
+
+                SET name, weight, v TO map(str.strip, line.split(' '))
+
+                Name.append(name)
+
+                kg.append(int(weight))
+
+                value.append(int(v))
+
+            OUTPUT("Names of boxes: ", Name)
+
+            OUTPUT("Boxes weight: ", kg)
+
+            OUTPUT("Boxes worth: ", value)
+
+            OUTPUT("Vehicle capacity: ", maxKg)
+
+            #读取到了数据，solution
+
+            solution(Name, kg, maxKg[0], value)
+
+    except FileNotFoundError:
+
+        OUTPUT("The file does not exist\n")
+
+        INPUT("Press enter to exit-- ")
+
+        sys.exit()
+
+
+
+IF __name__ EQUALS '__main__':
+
+    WHILE True:
+
+        SET file_name TO INPUT("enter file path: ")
+
+        OUTPUT()
+
+        run_assignment(filepath=file_name)#core
+
+        SET check TO INPUT("continue?(y|n) : ")
+
+        IF check != 'Y' and check != 'y':
+
+            break
+
+        OUTPUT()
+
+    INPUT("Press enter to exit-- ")

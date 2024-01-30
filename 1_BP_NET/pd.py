@@ -18,6 +18,7 @@ class NeuralNetwork:
         self.outputs = []
         self.activations = []
 
+
     def initialize_weights_and_biases(self):
         sizes = [self.input_size] + self.hidden_sizes + [self.output_size]
         weights = [np.random.randn(sizes[i], sizes[i + 1]) for i in range(len(sizes) - 1)]
@@ -128,13 +129,14 @@ if __name__ == "__main__":
 
     # 创建神经网络
     input_size = train_features.shape[1]
-    hidden_sizes = [7,6,4]
+    hidden_sizes = [10,50]
     output_size = 1
     nn = NeuralNetwork(input_size=input_size, hidden_sizes=hidden_sizes, output_size=output_size)
 
     # 训练BP神经网络
-    epochs = 10000
-    learning_rate = 0.001
+    epochs = 5000
+    learning_rate = 0.002
+
     
     losses = []  # 记录训练损失
     accuracies = []  # 记录测试准确率
@@ -159,7 +161,7 @@ if __name__ == "__main__":
     
     # 计算测试集的准确率
     final_accuracy = np.mean(threshold_predictions == test_target)
-    print("测试结果:")
+    #print("测试结果:")
     print(f"测试准确率: {final_accuracy}")
     
     # 绘制学习曲线

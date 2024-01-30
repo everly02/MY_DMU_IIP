@@ -1,3 +1,4 @@
+#用遗传算法实现图划分，改用最佳个体保留法
 import random
 import pickle
 import matplotlib.pyplot as plt
@@ -5,14 +6,21 @@ import matplotlib.pyplot as plt
 def initialize_population(population_size, num_nodes, num_subsets):
     return [[random.randint(0, num_subsets-1) for _ in range(num_nodes)] for _ in range(population_size)]
 
-def fitness(individual, graph):
+def fitness(individual, graph, k):
     total_weight = 0
     num_nodes = len(individual)
-    
-    for i in range(num_nodes):
-        for j in range(i+1, num_nodes):
-            if individual[i] != individual[j]:
-                total_weight += graph[i][j]
+    num_subsets = max(individual) + 1
+
+    for subset in range(num_subsets):
+        subset_nodes = [i for i, s in enumerate(individual) if s == subset]
+        
+        if len(subset_nodes) < k:
+            # Penalize solutions with subsets having fewer than k nodes
+            total_weight += (k - len(subset_nodes)) * 1000  # Adjust penalty as needed
+        else:
+            for i in range(len(subset_nodes)):
+                for j in range(i+1, len(subset_nodes)):
+                    total_weight += graph[subset_nodes[i]][subset_nodes[j]]
 
     return total_weight
 
@@ -28,8 +36,8 @@ def mutate(individual, mutation_rate, num_subsets):
             individual[i] = random.randint(0, num_subsets-1)
     return individual
 
-def elitist_preserving_selection(population, graph):
-    population = sorted(population, key=lambda x: fitness(x, graph))
+def elitist_preserving_selection(population, graph,k1):
+    population = sorted(population, key=lambda x: fitness(x, graph, k1))
     elite_size = int(0.1 * len(population))  # Preserve top 10% as elite
     elite = population[:elite_size]
     non_elite = population[elite_size:]
@@ -39,14 +47,14 @@ def genetic_algorithm(graph, num_subsets, k, population_size, generations, cross
     population = initialize_population(population_size, len(graph), num_subsets)
 
     for generation in range(generations):
-        population = elitist_preserving_selection(population, graph)
+        population = elitist_preserving_selection(population, graph,k)
 
         new_population = []
 
         fitness_list=[]
         for i in range(0,population_size):
-            fitness_list.append(fitness(population[i],graph))
-        best_fitness=max(fitness_list)
+            fitness_list.append(fitness(population[i],graph,k))
+        best_fitness=min(fitness_list)
         for i in range(0, population_size, 2):
             parent1 = random.choice(population)
             parent2 = random.choice(population)
@@ -63,8 +71,8 @@ def genetic_algorithm(graph, num_subsets, k, population_size, generations, cross
         best_fitness_values.append(best_fitness)
         population = new_population
 
-    best_solution = min(population, key=lambda x: fitness(x, graph))
-    best_fitness = fitness(best_solution, graph)
+    best_solution = min(population, key=lambda x: fitness(x, graph, k))
+    best_fitness = fitness(best_solution, graph, k)
 
     return best_solution, best_fitness
 best_fitness_values = []

@@ -1,0 +1,351 @@
+IMPORT numpy as np
+
+IMPORT pandas as pd
+
+from sklearn.preprocessing IMPORT LabelEncoder
+
+IMPORT matplotlib.pyplot as plt
+
+
+
+#import nni
+
+DEFINE CLASS NeuralNetwork:
+
+    DEFINE FUNCTION __init__(self, INPUT_size, hidden_sizes, output_size):
+
+        SET self.INPUT_size TO INPUT_size
+
+        SET self.hidden_sizes TO hidden_sizes
+
+        SET self.output_size TO output_size
+
+
+
+        # 初始化权重和偏置
+
+        SET self.weights, self.biases TO self.initialize_weights_and_biases()
+
+        SET self.INPUTs TO []
+
+        SET self.outputs TO []
+
+        SET self.activations TO []
+
+
+
+    DEFINE FUNCTION initialize_weights_and_biases(self):
+
+        SET sizes TO [self.INPUT_size] + self.hidden_sizes + [self.output_size]
+
+        SET weights TO [np.random.randn(sizes[i], sizes[i + 1]) FOR i IN range(len(sizes) - 1)]
+
+        SET biases TO [np.zeros((1, sizes[i + 1])) FOR i IN range(len(sizes) - 1)]
+
+        RETURN weights, biases
+
+
+
+    DEFINE FUNCTION sigmoid(self, x):
+
+        RETURN 1 / (1 + np.exp(-x))
+
+
+
+    DEFINE FUNCTION sigmoid_derivative(self, x):
+
+        RETURN x * (1 - x)
+
+
+
+    DEFINE FUNCTION forward(self, INPUT_data):
+
+        SET self.INPUTs TO []
+
+        SET self.outputs TO []
+
+        SET self.activations TO []
+
+
+
+        SET current_INPUT TO INPUT_data
+
+        FOR i IN range(len(self.weights)):
+
+            self.INPUTs.append(current_INPUT)
+
+            SET current_output TO np.dot(current_INPUT, self.weights[i]) + self.biases[i]
+
+            self.outputs.append(current_output)
+
+            SET current_activation TO self.sigmoid(current_output)
+
+            self.activations.append(current_activation)
+
+            SET current_INPUT TO current_activation
+
+
+
+        RETURN current_INPUT
+
+
+
+    DEFINE FUNCTION backward(self, target, learning_rate):
+
+        # 反向传播
+
+        SET errors TO [target - self.activations[-1]]
+
+        SET deltas TO [errors[-1] * self.sigmoid_derivative(self.activations[-1])]
+
+
+
+        FOR i IN range(len(self.weights) - 1, 0, -1):
+
+            errors.append(deltas[-1].dot(self.weights[i].T))
+
+            deltas.append(errors[-1] * self.sigmoid_derivative(self.activations[i - 1]))
+
+
+
+        # 更新权重和偏置
+
+        FOR i IN range(len(self.weights) - 1, -1, -1):
+
+            self.weights[i] += learning_rate * self.INPUTs[i].T.dot(deltas[len(self.weights) - 1 - i])
+
+            self.biases[i] += learning_rate * np.sum(deltas[len(self.weights) - 1 - i], axis=0, keepdims=True)
+
+            
+
+    DEFINE FUNCTION threshold_classify(self, output, threshold=0.5):
+
+        # 二元分类
+
+        RETURN (output > threshold).astype(int)
+
+    
+
+DEFINE FUNCTION load_data(file_path):
+
+    SET data TO pd.read_csv(file_path)
+
+    
+
+    # 对特征进行编码
+
+    SET label_encoder TO LabelEncoder()
+
+    FOR column IN data.columns:
+
+        IF data[column].dtype EQUALS np.object_:
+
+            SET data[column] TO label_encoder.fit_transform(data[column])
+
+
+
+    # 最后一列是目标变量，前面的列是特征
+
+    SET features TO data.iloc[:, :-1].values 
+
+    SET target TO data.iloc[:, -1].values.reshape(-1, 1)
+
+    RETURN features, target
+
+
+
+# 划分数据集
+
+DEFINE FUNCTION split_data(features, target, train_ratio=0.8):
+
+    SET num_samples TO len(features)
+
+    SET num_train_samples TO int(train_ratio * num_samples)
+
+
+
+    SET train_features TO features[:num_train_samples]
+
+    SET train_target TO target[:num_train_samples]
+
+    SET test_features TO features[num_train_samples:]
+
+    SET test_target TO target[num_train_samples:]
+
+
+
+    RETURN train_features, train_target, test_features, test_target
+
+
+
+DEFINE FUNCTION plot_lr(losses):
+
+    plt.figure(figsize=(6, 6))
+
+
+
+    # 学习曲线
+
+    #plt.subplot(1, 2, 1)
+
+    plt.plot(losses, label='training loss')
+
+    plt.title('training loss')
+
+    plt.xlabel('Epoch')
+
+    plt.ylabel('Loss')
+
+    plt.legend()
+
+    
+
+    plt.tight_layout()
+
+    plt.show()
+
+    
+
+DEFINE FUNCTION plot_acc(accuracies):
+
+    
+
+    plt.figure(figsize=(6, 6))
+
+    # 准确率曲线
+
+    #plt.subplot(1, 2, 1)
+
+    plt.plot(accuracies, label='test set accuracy', color='orange')
+
+    plt.title('test set accuracy')
+
+    plt.xlabel('Epoch')
+
+    plt.ylabel('accuracy')
+
+    plt.legend()
+
+
+
+    plt.tight_layout()
+
+    plt.show()
+
+
+
+IF __name__ EQUALS "__main__":
+
+    # 加载数据
+
+    SET file_path TO "music_data.csv"  
+
+    SET features, target TO load_data(file_path)
+
+
+
+    # 划分数据集
+
+    SET train_features, train_target, test_features, test_target TO split_data(features, target)
+
+
+
+    # 创建神经网络
+
+    SET INPUT_size TO train_features.shape[1]
+
+    SET hidden_sizes TO [7,6,4]
+
+    SET output_size TO 1
+
+    SET nn TO NeuralNetwork(INPUT_size=INPUT_size, hidden_sizes=hidden_sizes, output_size=output_size)
+
+
+
+    # 训练BP神经网络
+
+    SET epochs TO 10000
+
+    SET learning_rate TO 0.001
+
+    
+
+    SET losses TO []  # 记录训练损失
+
+    SET accuracies TO []  # 记录测试准确率
+
+
+
+    FOR epoch IN range(epochs):
+
+        SET output TO nn.forward(train_features)
+
+        nn.backward(train_target, learning_rate)
+
+
+
+        # 记录训练损失
+
+        SET loss TO np.mean(np.square(train_target - output))
+
+        losses.append(loss)
+
+    
+
+        IF epoch % 1000 EQUALS 0:
+
+            # 在验证集上计算准确率
+
+            SET predictions TO nn.forward(test_features)
+
+            SET threshold_predictions TO nn.threshold_classify(predictions)
+
+            SET accuracy TO np.mean(threshold_predictions EQUALS test_target)
+
+            accuracies.append(accuracy)
+
+
+
+            OUTPUT(f"Epoch {epoch}, Training Loss: {loss}, Test Accuracy: {accuracy}")
+
+    
+
+    
+
+    # 计算测试集的准确率
+
+    SET final_accuracy TO np.mean(threshold_predictions EQUALS test_target)
+
+    OUTPUT("测试结果:")
+
+    OUTPUT(f"测试准确率: {final_accuracy}")
+
+    
+
+    # 绘制学习曲线
+
+    plot_lr(losses)
+
+    
+
+    # 测试BP神经网络
+
+    SET predictions TO nn.forward(test_features)
+
+    SET threshold_predictions TO nn.threshold_classify(predictions)
+
+    FOR pd IN range(1,len(predictions)):
+
+        OUTPUT(f"预测：{threshold_predictions[pd]}, 实际：{test_target[pd]}")
+
+    #OUTPUT(threshold_predictions)
+
+    plot_acc(accuracies)
+
+    
+
+    
+
+    
+
+

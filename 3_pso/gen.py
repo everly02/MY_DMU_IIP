@@ -10,7 +10,7 @@ as the program cannot handle these convincingly
 4. Run the converter file
 '''
 
-python_file = 'main.py'
+python_file = 'algo.py'
 
 basic_conversion_rules = {"for": "FOR", "=": "TO", "if": "IF", "==": "EQUALS", "while": "WHILE", "until": "UNTIL",
                           "import": "IMPORT", "class": "DEFINE CLASS", "def": "DEFINE FUNCTION", "else:": "ELSE:",
@@ -47,7 +47,7 @@ def l2pseudo(to_pseudo):
 
 def p2file(to_file):
     py_file = os.path.splitext(os.path.basename(python_file))[0]
-    with open(py_file + '_pseudo.txt', 'w') as writer:
+    with open(py_file + '_pseudo.txt', 'w', encoding='utf-8') as writer:
         writer.write("\n".join(to_file))
 
 

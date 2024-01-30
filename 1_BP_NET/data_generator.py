@@ -23,7 +23,7 @@ def generate_csv(filename, num_rows, composer_weights=None, w1=None,w2=None):
                 i+=1
 if __name__ == "__main__":
     # 权重字典
-    composer_weights = {"taylor":0.8, "jay":0.7, "lucy":0.6, "troye":0.5, "beyonce":0.4, "kanye":0.3, "micheal":0.2}
-    genre_weights1 = {"pop":0.7, "rock":0.6, "none":0.5, "electronic":0.4, "jazz":0.3}
-    genre_weights2 ={"absolute":0.7, "rap":0.6, "none":0.5, "world music":0.4, "classical":0.3}
-    generate_csv("music_data.csv", num_rows=1000, composer_weights=composer_weights, w1=genre_weights1, w2=genre_weights2)
+    composer_weights = {"taylor":0.9, "jay":0.8, "lucy":0.7, "troye":0.5, "beyonce":0.3, "kanye":0.2, "micheal":0.1}
+    genre_weights1 = {"pop":0.9, "rock":0.7, "none":0.5, "electronic":0.3, "jazz":0.1}
+    genre_weights2 ={"absolute":0.9, "rap":0.7, "none":0.5, "world music":0.3, "classical":0.1}
+    generate_csv("music_data.csv", num_rows=2000, composer_weights=composer_weights, w1=genre_weights1, w2=genre_weights2)

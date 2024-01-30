@@ -1,0 +1,46 @@
+#生成无向图邻接矩阵
+import networkx as nx
+import numpy as np
+import random
+import pickle
+def generate_random_graph(node_count, edge_count):
+    # Calculate the probability p
+    p = 2.0 * edge_count / (node_count * (node_count - 1))
+
+    # Generate a random undirected graph
+    G = nx.fast_gnp_random_graph(node_count, p, seed=None, directed=False)
+
+    # Assign random weights to edges
+    for u, v in G.edges():
+        G[u][v]['weight'] = random.randint(1, 10)
+
+    # Create an empty 2D list for the adjacency matrix
+    adj_matrix = [[0] * node_count for _ in range(node_count)]
+
+    # Populate the adjacency matrix with weights
+    for u, v, data in G.edges(data=True):
+        adj_matrix[u][v] = data['weight']
+        adj_matrix[v][u] = data['weight']
+
+    return adj_matrix
+
+def save_graph_to_file(graph, filename):
+    with open(filename, 'wb') as file:
+        pickle.dump(graph, file)
+
+def main():
+    # Input the number of nodes and edges
+    node_count = int(input("节点数-"))
+    edge_count = int(input("边数-"))
+
+    # Generate a random adjacency matrix with weights
+    adj_matrix = generate_random_graph(node_count, edge_count)
+
+    # Print the adjacency matrix with weights
+    print("已创建图:")
+    for row in adj_matrix:
+        print(row)
+    save_graph_to_file(adj_matrix, 'graph_data.pkl')
+
+if __name__ == "__main__":
+    main()

@@ -6,16 +6,24 @@ import matplotlib.pyplot as plt
 def initialize_population(population_size, num_nodes, num_subsets):
     return [[random.randint(0, num_subsets-1) for _ in range(num_nodes)] for _ in range(population_size)]
 
-def fitness(individual, graph):
+def fitness(individual, graph, k):
     total_weight = 0
     num_nodes = len(individual)
-    
-    for i in range(num_nodes):
-        for j in range(i+1, num_nodes):
-            if individual[i] != individual[j]:
-                total_weight += graph[i][j]
+    num_subsets = max(individual) + 1
+
+    for subset in range(num_subsets):
+        subset_nodes = [i for i, s in enumerate(individual) if s == subset]
+        
+        if len(subset_nodes) < k:
+            # Penalize solutions with subsets having fewer than k nodes
+            total_weight += (k - len(subset_nodes)) * 1000  # Adjust penalty as needed
+        else:
+            for i in range(len(subset_nodes)):
+                for j in range(i+1, len(subset_nodes)):
+                    total_weight += graph[subset_nodes[i]][subset_nodes[j]]
 
     return total_weight
+
 
 def crossover(parent1, parent2):
     crossover_point = random.randint(1, len(parent1)-1)
@@ -32,7 +40,7 @@ def mutate(individual, mutation_rate, num_subsets):
 def select(population, fitness_values):
     
     total_fitness = sum(fitness_values)
-    probabilities = [(1-fitness / total_fitness) for fitness in fitness_values]
+    probabilities = [1 / len(population) if total_fitness == 0 else (1 - fitness / total_fitness) for fitness in fitness_values]
 
     selected_index = roulette_wheel(probabilities)
     selected_individual = population[selected_index]
@@ -54,17 +62,17 @@ def genetic_algorithm(graph, num_subsets, k1, population_size, generations, cros
     population = initialize_population(population_size, len(graph), num_subsets)
     
     for generation in range(generations):
-        population = sorted(population, key=lambda x: fitness(x, graph))
+        population = sorted(population, key=lambda x: fitness(x, graph, k1))
         new_population = []#population是individual的列表
         best_solution = population[0]#选第一个个体做最佳
         fitness_list=[]
         for i in range(0,population_size):
-            fitness_list.append(fitness(population[i],graph))
-        best_fitness=max(fitness_list)
-        total_fitness = sum(fitness(ind, graph) for ind in population)
+            fitness_list.append(fitness(population[i],graph,k1))
+        best_fitness=min(fitness_list)
+        total_fitness = sum(fitness(ind, graph, k1) for ind in population)
         for i in range(0, population_size, 2):
-            parent1 = select(population, [fitness(ind, graph) for ind in population])
-            parent2 = select(population, [fitness(ind, graph) for ind in population])
+            parent1 = select(population, [fitness(ind, graph, k1) for ind in population])
+            parent2 = select(population, [fitness(ind, graph, k1) for ind in population])
             
             if random.random() < crossover_rate:
                 child1, child2 = crossover(parent1, parent2)
@@ -78,8 +86,8 @@ def genetic_algorithm(graph, num_subsets, k1, population_size, generations, cros
         best_fitness_values.append(best_fitness)
         population = new_population
 
-    best_solution = min(population, key=lambda x: fitness(x, graph))
-    best_fitness = fitness(best_solution, graph)
+    best_solution = min(population, key=lambda x: fitness(x, graph,k1))
+    best_fitness = fitness(best_solution, graph,k1)
     
     return best_solution, best_fitness
 
